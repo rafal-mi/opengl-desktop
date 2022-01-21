@@ -1,0 +1,13 @@
+Configuration Properties -> Debugging -> Environment:
+	PATH=C:\Programs\GLEW\glew-2.1.0\bin\Release\Win32;C:\Programs\GLUT\freeglut\bin;%PATH%
+$(LocalDebuggerEnvironment)
+
+Configuration Properties -> C/C++ -> General -> Addidional Include Directories: 
+	C:\Programs\GLUT\freeglut\include;C:\Programs\GLEW\glew-2.1.0\include;$(ProjectDir)\..\..\include;%(AdditionalIncludeDirectories)
+	
+Configuration Properties -> Linker -> General -> Addidional Library Directories:
+	C:\Programs\GLUT\freeglut\lib;C:\Programs\GLEW\glew-2.1.0\lib\Release\Win32;%(AdditionalLibraryDirectories)
+	
+Configuration Properties -> Linker -> Input -> Additional Dependencies
+	glew32.lib;glu32.lib;opengl32.lib;freeglut.lib;%(AdditionalDependencies)
+	

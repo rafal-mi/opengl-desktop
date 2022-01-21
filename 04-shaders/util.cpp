@@ -42,8 +42,6 @@ bool readFile(const char* pFileName, string& outFile)
     return ret;
 }
 
-
-
 void devError(const char* pFileName, uint line, const char* format, ...)
 {
     char msg[1000];
@@ -60,7 +58,6 @@ void devError(const char* pFileName, uint line, const char* format, ...)
     fprintf(stderr, "%s:%d - %s", pFileName, line, msg);
 #endif
 }
-
 
 void devFileError(const char* pFileName, uint line, const char* pFileError)
 {

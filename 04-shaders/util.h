@@ -5,7 +5,7 @@
 #ifndef OGLDEV_UTIL_H
 #define OGLDEV_UTIL_H
 
-#ifndef _WIN64
+#ifndef _WIN32
 #include <unistd.h>
 #endif
 #include <stdlib.h>
@@ -14,6 +14,10 @@
 #include <vector>
 #include <string.h>
 #include <assert.h>
+
+#ifdef _WIN32
+typedef unsigned int uint;
+#endif
 
 using namespace std;
 

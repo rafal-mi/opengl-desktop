@@ -1,6 +1,0 @@
-make --dry-run --keep-going --print-directory
-make: Entering directory '/home/rafal/git/3D/opengl-desktop'
-make: Leaving directory '/home/rafal/git/3D/opengl-desktop'
- 
-make: *** No targets specified and no makefile found.  Stop.
- 

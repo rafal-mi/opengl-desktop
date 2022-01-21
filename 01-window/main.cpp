@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 
-static void RenderSceneCB()
+static void renderSceneCallback()
 {
     glClear(GL_COLOR_BUFFER_BIT);
     glutSwapBuffers();
@@ -28,10 +28,10 @@ int main(int argc, char** argv)
     int win = glutCreateWindow("Tutorial 01");
     printf("window id: %d\n", win);
 
-    GLclampf Red = 0.0f, Green = 0.0f, Blue = 0.0f, Alpha = 0.0f;
+    GLclampf Red = 0.0f, Green = 0.5f, Blue = 0.5f, Alpha = 0.0f;
     glClearColor(Red, Green, Blue, Alpha);
 
-    glutDisplayFunc(RenderSceneCB);
+    glutDisplayFunc(renderSceneCallback);
 
     glutMainLoop();
 

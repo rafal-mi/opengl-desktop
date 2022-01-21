@@ -10,7 +10,7 @@
 
 GLuint VBO;
 
-static void RenderSceneCB()
+static void renderSceneCallback()
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -28,7 +28,7 @@ static void RenderSceneCB()
 }
 
 
-static void CreateVertexBuffer()
+static void createVertexBuffer()
 {
     Vector3f Vertices[1];
     Vertices[0] = Vector3f(0.0f, 0.0f, 0.0f);
@@ -66,9 +66,9 @@ int main(int argc, char** argv)
     GLclampf Red = 0.0f, Green = 0.0f, Blue = 0.0f, Alpha = 0.0f;
     glClearColor(Red, Green, Blue, Alpha);
 
-    CreateVertexBuffer();
+    createVertexBuffer();
 
-    glutDisplayFunc(RenderSceneCB);
+    glutDisplayFunc(renderSceneCallback);
 
     glutMainLoop();
 

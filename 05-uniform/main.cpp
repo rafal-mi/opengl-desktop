@@ -21,7 +21,7 @@ static void RenderSceneCB()
     glClear(GL_COLOR_BUFFER_BIT);
 
     static float Scale = 0.0f;
-    static float Delta = 0.001f;
+    static float Delta = 0.0001f;
 
     Scale += Delta;
     if ((Scale >= 1.0f) || (Scale <= -1.0f)) {

@@ -15,6 +15,7 @@
 
 GLuint VBO;
 GLint gTranslationLocation;
+int delay = 10;
 
 static void RenderSceneCB()
 {
@@ -45,11 +46,14 @@ static void RenderSceneCB()
 
     glDisableVertexAttribArray(0);
 
-    glutPostRedisplay();
-
+    //glutPostRedisplay();
     glutSwapBuffers();
 }
 
+void updateScene(int i) {
+    glutPostRedisplay();
+    glutTimerFunc(delay, updateScene, 0);
+}
 
 static void CreateVertexBuffer()
 {
@@ -179,6 +183,7 @@ int main(int argc, char** argv)
     CompileShaders();
 
     glutDisplayFunc(RenderSceneCB);
+    glutTimerFunc(delay, updateScene, 0);
 
     glutMainLoop();
 

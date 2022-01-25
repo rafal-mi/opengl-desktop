@@ -14,27 +14,27 @@
 #include "util.h"
 
 GLuint VBO;
-GLint gTranslationLocation;
+GLint gRotationLocation;
 int delay = 10;
 
 static void RenderSceneCB()
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    static float Scale = 0.0f;
-    static float Delta = 0.001f;
+    static float AngleInRadians = 0.0f;
+    static float Delta = 0.01f;
 
-    Scale += Delta;
-    if ((Scale >= 1.0f) || (Scale <= -1.0f)) {
+    AngleInRadians += Delta;
+    if ((AngleInRadians >= 1.5708f) || (AngleInRadians <= -1.5708f)) {
         Delta *= -1.0f;
     }
 
-    Matrix4f translation(1.0f, 0.0f, 0.0f, Scale * 2,
-                         0.0f, 1.0f, 0.0f, Scale,
-                         0.0f, 0.0f, 1.0f, 0.0,
-                         0.0f, 0.0f, 0.0f, 1.0f);
+    Matrix4f Rotation(cosf(AngleInRadians), -sinf(AngleInRadians), 0.0f, 0.0f,
+        sinf(AngleInRadians), cosf(AngleInRadians), 0.0f, 0.0f,
+        0.0, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f);
 
-    glUniformMatrix4fv(gTranslationLocation, 1, GL_TRUE, &translation.m[0][0]);
+    glUniformMatrix4fv(gRotationLocation, 1, GL_TRUE, &Rotation.m[0][0]);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
@@ -58,9 +58,9 @@ void updateScene(int i) {
 static void CreateVertexBuffer()
 {
     Vector3f vertices[3];
-    vertices[0] = Vector3f(-1.0f, -1.0f, 0.0f);   // bottom left
-    vertices[1] = Vector3f(1.0f, -1.0f, 0.0f);    // bottom right
-    vertices[2] = Vector3f(0.0f, 1.0f, 0.0f);     // top
+    vertices[0] = Vector3f(-0.5f, -0.5f, 0.0f);   // bottom left
+    vertices[1] = Vector3f(0.5f, -0.5f, 0.0f);    // bottom right
+    vertices[2] = Vector3f(0.0f, 0.5f, 0.0f);     // top
 
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -137,9 +137,9 @@ static void CompileShaders()
         exit(1);
     }
 
-    gTranslationLocation = glGetUniformLocation(ShaderProgram, "gTranslation");
-    if (gTranslationLocation == -1) {
-        printf("Error getting uniform location of 'gTranslation'\n");
+    gRotationLocation = glGetUniformLocation(ShaderProgram, "gRotation");
+    if (gRotationLocation == -1) {
+        printf("Error getting uniform location of 'gRotation'\n");
         exit(1);
     }
 

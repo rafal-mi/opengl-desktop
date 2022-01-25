@@ -14,53 +14,53 @@
 #include "util.h"
 
 GLuint VBO;
-GLint gTranslationLocation;
-int delay = 10;
+GLuint gWorldLocation;
 
-static void RenderSceneCB()
+const char* pVSFileName = "shader.vs";
+const char* pFSFileName = "shader.fs";
+
+
+static void _RenderSceneCB()
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
     static float Scale = 0.0f;
-    static float Delta = 0.001f;
 
-    Scale += Delta;
-    if ((Scale >= 1.0f) || (Scale <= -1.0f)) {
-        Delta *= -1.0f;
-    }
+    Scale += 0.001f;
 
-    Matrix4f translation(1.0f, 0.0f, 0.0f, Scale * 2,
-                         0.0f, 1.0f, 0.0f, Scale,
-                         0.0f, 0.0f, 1.0f, 0.0,
-                         0.0f, 0.0f, 0.0f, 1.0f);
+    Matrix4f World;
 
-    glUniformMatrix4fv(gTranslationLocation, 1, GL_TRUE, &translation.m[0][0]);
+    World.m[0][0] = sinf(Scale); World.m[0][1] = 0.0f; World.m[0][2] = 0.0f;        World.m[0][3] = 0.0f;
+    World.m[1][0] = 0.0f; World.m[1][1] = sinf(Scale); World.m[1][2] = 0.0f;        World.m[1][3] = 0.0f;
+    World.m[2][0] = 0.0f; ; World.m[2][1] = 0.0f; ; World.m[2][2] = sinf(Scale); World.m[2][3] = 0.0f;
+    World.m[3][0] = 0.0f; ; World.m[3][1] = 0.0f; ; World.m[3][2] = 0.0f;        World.m[3][3] = 1.0f;
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glUniformMatrix4fv(gWorldLocation, 1, GL_TRUE, &World.m[0][0]);
 
     glEnableVertexAttribArray(0);
-
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
     glDisableVertexAttribArray(0);
 
-    //glutPostRedisplay();
     glutSwapBuffers();
 }
 
-void updateScene(int i) {
-    glutPostRedisplay();
-    glutTimerFunc(delay, updateScene, 0);
+
+static void InitializeGlutCallbacks()
+{
+    glutDisplayFunc(_RenderSceneCB);
+    glutIdleFunc(_RenderSceneCB);
 }
 
 static void CreateVertexBuffer()
 {
     Vector3f vertices[3];
-    vertices[0] = Vector3f(-1.0f, -1.0f, 0.0f);   // bottom left
-    vertices[1] = Vector3f(1.0f, -1.0f, 0.0f);    // bottom right
-    vertices[2] = Vector3f(0.0f, 1.0f, 0.0f);     // top
+    vertices[0] = Vector3f(-0.5f, -0.5f, 0.0f);   // bottom left
+    vertices[1] = Vector3f(0.5f, -0.5f, 0.0f);    // bottom right
+    vertices[2] = Vector3f(0.0f, 0.5f, 0.0f);     // top
 
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -99,9 +99,6 @@ static void AddShader(GLuint ShaderProgram, const char* pShaderText, GLenum Shad
     glAttachShader(ShaderProgram, ShaderObj);
 }
 
-const char* pVSFileName = "shader.vs";
-const char* pFSFileName = "shader.fs";
-
 static void CompileShaders()
 {
     GLuint ShaderProgram = glCreateProgram();
@@ -137,12 +134,6 @@ static void CompileShaders()
         exit(1);
     }
 
-    gTranslationLocation = glGetUniformLocation(ShaderProgram, "gTranslation");
-    if (gTranslationLocation == -1) {
-        printf("Error getting uniform location of 'gTranslation'\n");
-        exit(1);
-    }
-
     glValidateProgram(ShaderProgram);
     glGetProgramiv(ShaderProgram, GL_VALIDATE_STATUS, &Success);
     if (!Success) {
@@ -152,6 +143,9 @@ static void CompileShaders()
     }
 
     glUseProgram(ShaderProgram);
+
+    gWorldLocation = glGetUniformLocation(ShaderProgram, "gWorld");
+    assert(gWorldLocation != 0xFFFFFFFF);
 }
 
 int main(int argc, char** argv)
@@ -165,8 +159,10 @@ int main(int argc, char** argv)
     int x = 200;
     int y = 100;
     glutInitWindowPosition(x, y);
-    int win = glutCreateWindow("Tutorial 06");
+    int win = glutCreateWindow("Tutorial 09");
     printf("window id: %d\n", win);
+
+    InitializeGlutCallbacks();
 
     // Must be done after glut is initialized!
     GLenum res = glewInit();
@@ -181,9 +177,6 @@ int main(int argc, char** argv)
     CreateVertexBuffer();
 
     CompileShaders();
-
-    glutDisplayFunc(RenderSceneCB);
-    glutTimerFunc(delay, updateScene, 0);
 
     glutMainLoop();
 

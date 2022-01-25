@@ -14,45 +14,48 @@
 #include "util.h"
 
 GLuint VBO;
-GLuint gWorldLocation;
+GLuint gScalingLocation;
 
 const char* pVSFileName = "shader.vs";
 const char* pFSFileName = "shader.fs";
 
+static void ScalingExample()
+{
+    static float Scale = 1.0f;
+    static float Delta = 0.001f;
 
-static void _RenderSceneCB()
+    Scale += Delta;
+    if ((Scale >= 1.5f) || (Scale <= 0.5)) {
+        Delta *= -1.0f;
+    }
+
+    Matrix4f Scaling(Scale, 0.0f, 0.0f, 0.0f,
+        0.0f, Scale, 0.0f, 0.0f,
+        0.0f, 0.0f, Scale, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f);
+
+    glUniformMatrix4fv(gScalingLocation, 1, GL_TRUE, &Scaling.m[0][0]);
+}
+
+static void RenderSceneCB()
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    static float Scale = 0.0f;
+    ScalingExample();
 
-    Scale += 0.001f;
-
-    Matrix4f World;
-
-    World.m[0][0] = sinf(Scale); World.m[0][1] = 0.0f; World.m[0][2] = 0.0f;        World.m[0][3] = 0.0f;
-    World.m[1][0] = 0.0f; World.m[1][1] = sinf(Scale); World.m[1][2] = 0.0f;        World.m[1][3] = 0.0f;
-    World.m[2][0] = 0.0f; ; World.m[2][1] = 0.0f; ; World.m[2][2] = sinf(Scale); World.m[2][3] = 0.0f;
-    World.m[3][0] = 0.0f; ; World.m[3][1] = 0.0f; ; World.m[3][2] = 0.0f;        World.m[3][3] = 1.0f;
-
-    glUniformMatrix4fv(gWorldLocation, 1, GL_TRUE, &World.m[0][0]);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
     glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
     glDisableVertexAttribArray(0);
 
+    glutPostRedisplay();
+
     glutSwapBuffers();
-}
-
-
-static void InitializeGlutCallbacks()
-{
-    glutDisplayFunc(_RenderSceneCB);
-    glutIdleFunc(_RenderSceneCB);
 }
 
 static void CreateVertexBuffer()
@@ -134,6 +137,12 @@ static void CompileShaders()
         exit(1);
     }
 
+    gScalingLocation = glGetUniformLocation(ShaderProgram, "gScaling");
+    if (gScalingLocation == -1) {
+        printf("Error getting uniform location of 'gScaling'\n");
+        exit(1);
+    }
+
     glValidateProgram(ShaderProgram);
     glGetProgramiv(ShaderProgram, GL_VALIDATE_STATUS, &Success);
     if (!Success) {
@@ -143,9 +152,6 @@ static void CompileShaders()
     }
 
     glUseProgram(ShaderProgram);
-
-    gWorldLocation = glGetUniformLocation(ShaderProgram, "gWorld");
-    assert(gWorldLocation != 0xFFFFFFFF);
 }
 
 int main(int argc, char** argv)
@@ -162,8 +168,6 @@ int main(int argc, char** argv)
     int win = glutCreateWindow("Tutorial 09");
     printf("window id: %d\n", win);
 
-    InitializeGlutCallbacks();
-
     // Must be done after glut is initialized!
     GLenum res = glewInit();
     if (res != GLEW_OK) {
@@ -177,6 +181,8 @@ int main(int argc, char** argv)
     CreateVertexBuffer();
 
     CompileShaders();
+
+    glutDisplayFunc(RenderSceneCB);
 
     glutMainLoop();
 

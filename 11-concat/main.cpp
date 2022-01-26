@@ -28,8 +28,8 @@
 #include "math_3d.h"
 #include "util.h"
 
-#define WINDOW_WIDTH  1200
-#define WINDOW_HEIGHT 1200
+#define WINDOW_WIDTH  640
+#define WINDOW_HEIGHT 640
 
 GLuint VBO;
 GLuint IBO;
@@ -43,7 +43,7 @@ static void RenderSceneCB()
     static float Scale = 0.0f;
 
 #ifdef _WIN64
-    Scale += 0.001f;
+    Scale += 0.0001f;
 #else
     Scale += 0.02f;
 #endif
@@ -68,6 +68,7 @@ static void RenderSceneCB()
         0.0f, 0.0f, 1.0f, 0.0f);
 
     Matrix4f FinalMatrix = Projection * Translation * Rotation;
+    // FinalMatrix.print();
 
     glUniformMatrix4fv(gWorldLocation, 1, GL_TRUE, &FinalMatrix.m[0][0]);
 

@@ -141,6 +141,15 @@ public:
 
     void InitTranslationTransform(float x, float y, float z);
 
+    void print() const {
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                printf("%6.3f, ", m[i][j]);
+            }
+            printf("\n");
+        }
+    }
+
 private: 
     void InitRotationX(float RotateX);
     void InitRotationY(float RotateY);

@@ -16,29 +16,28 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef CAMERA_H
-#define CAMERA_H
+#ifndef WORLD_TRANSFORM_H
+#define WORLD_TRANSFORM_H
 
 #include "math_3d.h"
 
-class Camera
-{
-public:
+class WorldTrans {
+ public:
+    WorldTrans() {}
 
-    Camera();
-
+    void SetScale(float scale);
+    void SetRotation(float x, float y, float z);
     void SetPosition(float x, float y, float z);
 
-    void OnKeyboard(unsigned char key);
+    void Rotate(float x, float y, float z);
 
     Matrix4f GetMatrix();
 
-private:
-
-    Vector3f m_pos;
-    Vector3f m_target;
-    Vector3f m_up;
-    float m_speed = 0.1f;
+ private:
+    float    m_scale    = 1.0f;
+    Vector3f m_rotation = Vector3f(0.0f, 0.0f, 0.0f);
+    Vector3f m_pos      = Vector3f(0.0f, 0.0f, 0.0f);
 };
 
-#endif  /* CAMERA_H */
+
+#endif

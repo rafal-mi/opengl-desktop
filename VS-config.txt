@@ -6,11 +6,11 @@ Configuration Properties -> Debugging -> Environment:
 $(LocalDebuggerEnvironment)
 
 Configuration Properties -> C/C++ -> General -> Addidional Include Directories: 
-	C:\Programs\GLEW\glew-2.1.0\include;C:\Programs\GLUT\freeglut\include;
+	C:\Programs\GLEW\glew-2.1.0\include;C:\Programs\GLUT\freeglut\include;$(ProjectDir)/..;
 	
 Configuration Properties -> Linker -> General -> Addidional Library Directories:
 	C:\Programs\GLEW\glew-2.1.0\lib\Release\x64;C:\Programs\GLUT\freeglut\lib\x64;
 	
 Configuration Properties -> Linker -> Input -> Additional Dependencies (add before existing)
-	glew32.lib;glu32.lib;opengl32.lib;freeglut.lib;kernel32.lib;...
+	glew32.lib;glu32.lib;opengl32.lib;freeglut.lib;
 	

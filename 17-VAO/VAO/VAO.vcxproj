@@ -133,7 +133,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\camera.cpp" />
     <ClCompile Include="..\main.cpp" />
+    <ClCompile Include="..\math_3d.cpp" />
+    <ClCompile Include="..\stb_image.cpp" />
+    <ClCompile Include="..\texture.cpp" />
+    <ClCompile Include="..\util.cpp" />
+    <ClCompile Include="..\world_transform.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\camera.h" />
+    <ClInclude Include="..\math_3d.h" />
+    <ClInclude Include="..\stb_image.h" />
+    <ClInclude Include="..\texture.h" />
+    <ClInclude Include="..\util.h" />
+    <ClInclude Include="..\world_transform.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

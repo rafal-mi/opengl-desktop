@@ -5,7 +5,7 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
-#include "math_3d.h"
+// #include "math_3d.h"
 #include "texture.h"
 #include "util.h"
 #include "camera.h"
@@ -13,6 +13,7 @@
 
 #define WINDOW_WIDTH  640
 #define WINDOW_HEIGHT 640
+
 
 struct Vertex {
     Vector3f pos;

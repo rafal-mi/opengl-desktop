@@ -2,15 +2,15 @@ Configuration Properties -> Debugging -> Working Directory:
 	$(ProjectDir)/..
 
 Configuration Properties -> Debugging -> Environment:
-	PATH=C:\Programs\GLEW\glew-2.1.0\bin\Release\x64;C:\Programs\GLUT\freeglut\bin\x64;%PATH%
+	PATH=C:\Programs\GLEW\glew-2.1.0\bin\Release\x64;C:\Programs\GLUT\freeglut\bin\x64;C:\Programs\Assimp\bin;%PATH%
 $(LocalDebuggerEnvironment)
 
 Configuration Properties -> C/C++ -> General -> Addidional Include Directories: 
-	C:\Programs\GLEW\glew-2.1.0\include;C:\Programs\GLUT\freeglut\include;$(ProjectDir)/..;
+	C:\Programs\GLEW\glew-2.1.0\include;C:\Programs\GLUT\freeglut\include;C:\Programs\Assimp\include;$(ProjectDir)/..;
 	
 Configuration Properties -> Linker -> General -> Addidional Library Directories:
-	C:\Programs\GLEW\glew-2.1.0\lib\Release\x64;C:\Programs\GLUT\freeglut\lib\x64;
+	C:\Programs\GLEW\glew-2.1.0\lib\Release\x64;C:\Programs\GLUT\freeglut\lib\x64;C:\Programs\Assimp\lib;
 	
 Configuration Properties -> Linker -> Input -> Additional Dependencies (add before existing)
-	glew32.lib;glu32.lib;opengl32.lib;freeglut.lib;
+	glew32.lib;glu32.lib;opengl32.lib;freeglut.lib;assimp-vc143-mtd.lib;
 	

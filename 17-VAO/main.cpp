@@ -1,39 +1,46 @@
+/*
+
+        Copyright 2021 Etay Meiri
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    Tutorial 18 - Loading models with Assimp
+*/
+
 #include <stdio.h>
 #include <string.h>
-#include <string>
 
+#include <math.h>
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
-// #include "math_3d.h"
-#include "texture.h"
-#include "util.h"
+#include "ogldev_math_3d.h"
+#include "ogldev_texture.h"
+#include "ogldev_world_transform.h"
+#include "ogldev_basic_mesh.h"
 #include "camera.h"
-#include "world_transform.h"
 
-#define WINDOW_WIDTH  640
-#define WINDOW_HEIGHT 640
-
-
-struct Vertex {
-    Vector3f pos;
-    Vector2f tex;
-
-    Vertex() {}
-
-    Vertex(const Vector3f& pos_, const Vector2f& tex_)
-    {
-        pos = pos_;
-        tex = tex_;
-    }
-};
+#define WINDOW_WIDTH  2560
+#define WINDOW_HEIGHT 1440
 
 
-class Tutorial17
+
+class Tutorial18
 {
 public:
-    Tutorial17();
-    ~Tutorial17();
+    Tutorial18();
+    ~Tutorial18();
 
     bool Init();
 
@@ -44,29 +51,19 @@ public:
 
 private:
 
-    void CreateCubeVAO();
-    void CreatePyramidVAO();
     void CompileShaders();
     void AddShader(GLuint ShaderProgram, const char* pShaderText, GLenum ShaderType);
-
-    GLuint CubeVAO = -1;
-    GLuint CubeVBO = -1;
-    GLuint CubeIBO = -1;
-
-    GLuint PyramidVAO = -1;
-    GLuint PyramidVBO = -1;
-    GLuint PyramidIBO = -1;
 
     GLuint WVPLocation;
     GLuint SamplerLocation;
     Texture* pTexture = NULL;
     Camera* pGameCamera = NULL;
-    WorldTrans CubeWorldTransform;
+    BasicMesh* pMesh = NULL;
     PersProjInfo persProjInfo;
 };
 
 
-Tutorial17::Tutorial17()
+Tutorial18::Tutorial18()
 {
     GLclampf Red = 0.0f, Green = 0.0f, Blue = 0.0f, Alpha = 0.0f;
     glClearColor(Red, Green, Blue, Alpha);
@@ -74,6 +71,8 @@ Tutorial17::Tutorial17()
     glEnable(GL_CULL_FACE);
     glFrontFace(GL_CW);
     glCullFace(GL_BACK);
+
+    glEnable(GL_DEPTH_TEST);
 
     float FOV = 45.0f;
     float zNear = 1.0f;
@@ -83,7 +82,7 @@ Tutorial17::Tutorial17()
 }
 
 
-Tutorial17::~Tutorial17()
+Tutorial18::~Tutorial18()
 {
     if (pTexture) {
         delete pTexture;
@@ -93,40 +92,14 @@ Tutorial17::~Tutorial17()
         delete pGameCamera;
     }
 
-    if (CubeVAO != -1) {
-        glDeleteVertexArrays(1, &CubeVAO);
-    }
-
-    if (CubeVBO != -1) {
-        glDeleteBuffers(1, &CubeVBO);
-    }
-
-    if (CubeIBO != -1) {
-        glDeleteBuffers(1, &CubeIBO);
-    }
-
-    if (PyramidVAO != -1) {
-        glDeleteVertexArrays(1, &PyramidVAO);
-    }
-
-    if (PyramidVBO != -1) {
-        glDeleteBuffers(1, &PyramidVBO);
-    }
-
-    if (PyramidIBO != -1) {
-        glDeleteBuffers(1, &PyramidIBO);
+    if (pMesh) {
+        delete pMesh;
     }
 }
 
 
-bool Tutorial17::Init()
+bool Tutorial18::Init()
 {
-    CreateCubeVAO();
-    CreatePyramidVAO();
-
-    // Bind a default object
-    glBindVertexArray(CubeVAO);
-
     CompileShaders();
 
     pTexture = new Texture(GL_TEXTURE_2D, "../Content/bricks.jpg");
@@ -144,13 +117,19 @@ bool Tutorial17::Init()
 
     pGameCamera = new Camera(WINDOW_WIDTH, WINDOW_HEIGHT, CameraPos, CameraTarget, CameraUp);
 
+    pMesh = new BasicMesh();
+
+    if (!pMesh->LoadMesh("../Content/spider.obj")) {
+        return false;
+    }
+
     return true;
 }
 
 
-void Tutorial17::RenderSceneCB()
+void Tutorial18::RenderSceneCB()
 {
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     pGameCamera->OnRender();
 
@@ -160,10 +139,13 @@ void Tutorial17::RenderSceneCB()
     float YRotationAngle = 1.0f;
 #endif
 
-    CubeWorldTransform.SetPosition(0.0f, 0.0f, 2.0f);
-    CubeWorldTransform.Rotate(0.0f, YRotationAngle, 0.0f);
+    WorldTrans& worldTransform = pMesh->GetWorldTransform();
 
-    Matrix4f World = CubeWorldTransform.GetMatrix();
+    worldTransform.SetScale(0.01f);
+    worldTransform.SetPosition(0.0f, 0.0f, 2.0f);
+    worldTransform.Rotate(0.0f, YRotationAngle, 0.0f);
+
+    Matrix4f World = worldTransform.GetMatrix();
 
     Matrix4f View = pGameCamera->GetMatrix();
 
@@ -173,15 +155,7 @@ void Tutorial17::RenderSceneCB()
     Matrix4f WVP = Projection * View * World;
     glUniformMatrix4fv(WVPLocation, 1, GL_TRUE, &WVP.m[0][0]);
 
-    GLint CurrentVAO;
-    glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &CurrentVAO);
-
-    if (CurrentVAO == CubeVAO) {
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-    }
-    else {
-        glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
-    }
+    pMesh->Render();
 
     glutPostRedisplay();
 
@@ -189,143 +163,31 @@ void Tutorial17::RenderSceneCB()
 }
 
 
-void Tutorial17::KeyboardCB(unsigned char key, int mouse_x, int mouse_y)
+void Tutorial18::KeyboardCB(unsigned char key, int mouse_x, int mouse_y)
 {
     switch (key) {
     case 'q':
     case 27:    // escape key code
         exit(0);
-
-    case '1':
-        glBindVertexArray(CubeVAO);
-        break;
-
-    case '2':
-        glBindVertexArray(PyramidVAO);
-        break;
     }
 
     pGameCamera->OnKeyboard(key);
 }
 
 
-void Tutorial17::SpecialKeyboardCB(int key, int mouse_x, int mouse_y)
+void Tutorial18::SpecialKeyboardCB(int key, int mouse_x, int mouse_y)
 {
     pGameCamera->OnKeyboard(key);
 }
 
 
-void Tutorial17::PassiveMouseCB(int x, int y)
+void Tutorial18::PassiveMouseCB(int x, int y)
 {
     pGameCamera->OnMouse(x, y);
 }
 
 
-void Tutorial17::CreateCubeVAO()
-{
-    glGenVertexArrays(1, &CubeVAO);
-    glBindVertexArray(CubeVAO);
-
-    Vertex Vertices[8];
-
-    Vector2f t00 = Vector2f(0.0f, 0.0f);  // Bottom left
-    Vector2f t01 = Vector2f(0.0f, 1.0f);  // Top left
-    Vector2f t10 = Vector2f(1.0f, 0.0f);  // Bottom right
-    Vector2f t11 = Vector2f(1.0f, 1.0f);  // Top right
-
-    Vertices[0] = Vertex(Vector3f(0.5f, 0.5f, 0.5f), t00);
-    Vertices[1] = Vertex(Vector3f(-0.5f, 0.5f, -0.5f), t01);
-    Vertices[2] = Vertex(Vector3f(-0.5f, 0.5f, 0.5f), t10);
-    Vertices[3] = Vertex(Vector3f(0.5f, -0.5f, -0.5f), t11);
-    Vertices[4] = Vertex(Vector3f(-0.5f, -0.5f, -0.5f), t00);
-    Vertices[5] = Vertex(Vector3f(0.5f, 0.5f, -0.5f), t10);
-    Vertices[6] = Vertex(Vector3f(0.5f, -0.5f, 0.5f), t01);
-    Vertices[7] = Vertex(Vector3f(-0.5f, -0.5f, 0.5f), t11);
-
-    glGenBuffers(1, &CubeVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, CubeVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices), Vertices, GL_STATIC_DRAW);
-
-    // position
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
-
-    // tex coords
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(3 * sizeof(float)));
-
-    unsigned int Indices[] = {
-                              0, 1, 2,
-                              1, 3, 4,
-                              5, 6, 3,
-                              7, 3, 6,
-                              2, 4, 7,
-                              0, 7, 6,
-                              0, 5, 1,
-                              1, 5, 3,
-                              5, 0, 6,
-                              7, 4, 3,
-                              2, 1, 4,
-                              0, 2, 7
-    };
-
-    glGenBuffers(1, &CubeIBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, CubeIBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices), Indices, GL_STATIC_DRAW);
-
-    glBindVertexArray(0);
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}
-
-
-void Tutorial17::CreatePyramidVAO()
-{
-    glGenVertexArrays(1, &PyramidVAO);
-    glBindVertexArray(PyramidVAO);
-
-    Vector2f t00 = Vector2f(0.0f, 0.0f);
-    Vector2f t050 = Vector2f(0.5f, 0.0f);
-    Vector2f t10 = Vector2f(1.0f, 0.0f);
-    Vector2f t051 = Vector2f(0.5f, 1.0f);
-
-    Vertex Vertices[4] = { Vertex(Vector3f(-1.0f, -1.0f, 0.5773f), t00),
-                           Vertex(Vector3f(0.0f, -1.0f, -1.15475f), t050),
-                           Vertex(Vector3f(1.0f, -1.0f, 0.5773f), t10),
-                           Vertex(Vector3f(0.0f, 1.0f, 0.0f), t051) };
-
-    glGenBuffers(1, &PyramidVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, PyramidVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices), Vertices, GL_STATIC_DRAW);
-
-    // position
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
-
-    // tex coords
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(3 * sizeof(float)));
-
-    unsigned int Indices[] = { 0, 3, 1,
-                               1, 3, 2,
-                               2, 3, 0,
-                               0, 1, 2 };
-
-    glGenBuffers(1, &PyramidIBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, PyramidIBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices), Indices, GL_STATIC_DRAW);
-
-    glBindVertexArray(0);
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}
-
-
-void Tutorial17::AddShader(GLuint ShaderProgram, const char* pShaderText, GLenum ShaderType)
+void Tutorial18::AddShader(GLuint ShaderProgram, const char* pShaderText, GLenum ShaderType)
 {
     GLuint ShaderObj = glCreateShader(ShaderType);
 
@@ -358,7 +220,7 @@ void Tutorial17::AddShader(GLuint ShaderProgram, const char* pShaderText, GLenum
 }
 
 
-void Tutorial17::CompileShaders()
+void Tutorial18::CompileShaders()
 {
     GLuint ShaderProgram = glCreateProgram();
 
@@ -417,29 +279,30 @@ void Tutorial17::CompileShaders()
 }
 
 
-Tutorial17* pTutorial17 = NULL;
+Tutorial18* pTutorial18 = NULL;
+
 
 void RenderSceneCB()
 {
-    pTutorial17->RenderSceneCB();
+    pTutorial18->RenderSceneCB();
 }
 
 
 void KeyboardCB(unsigned char key, int mouse_x, int mouse_y)
 {
-    pTutorial17->KeyboardCB(key, mouse_x, mouse_y);
+    pTutorial18->KeyboardCB(key, mouse_x, mouse_y);
 }
 
 
 void SpecialKeyboardCB(int key, int mouse_x, int mouse_y)
 {
-    pTutorial17->SpecialKeyboardCB(key, mouse_x, mouse_y);
+    pTutorial18->SpecialKeyboardCB(key, mouse_x, mouse_y);
 }
 
 
 void PassiveMouseCB(int x, int y)
 {
-    pTutorial17->PassiveMouseCB(x, y);
+    pTutorial18->PassiveMouseCB(x, y);
 }
 
 
@@ -451,10 +314,8 @@ void InitializeGlutCallbacks()
     glutPassiveMotionFunc(PassiveMouseCB);
 }
 
-
-
-
-int main(int argc, char* argv[]) {
+int main(int argc, char** argv)
+{
 #ifdef _WIN64
     srand(GetCurrentProcessId());
 #else
@@ -464,19 +325,19 @@ int main(int argc, char* argv[]) {
     glutInit(&argc, argv);
     glutInitContextVersion(3, 3);
     glutInitContextProfile(GLUT_CORE_PROFILE);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
     glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
 
     int x = 200;
     int y = 100;
     glutInitWindowPosition(x, y);
-    int win = glutCreateWindow("Tutorial 17");
+    int win = glutCreateWindow("Tutorial 18");
     printf("window id: %d\n", win);
 
-    // char game_mode_string[64];
-    // Game mode string example: <Width>x<Height>@<FPS>
+    char game_mode_string[64];
+    // Game mode string example: 1920x1080@32
     // Enable the following three lines for full screen
-    // snprintf(game_mode_string, sizeof(game_mode_string), "%dx%d@60", WINDOW_WIDTH, WINDOW_HEIGHT);
+    // snprintf(game_mode_string, sizeof(game_mode_string), "%dx%d@32", WINDOW_WIDTH, WINDOW_HEIGHT);
     // glutGameModeString(game_mode_string);
     // glutEnterGameMode();
 
@@ -489,15 +350,13 @@ int main(int argc, char* argv[]) {
 
     InitializeGlutCallbacks();
 
-    pTutorial17 = new Tutorial17();
+    pTutorial18 = new Tutorial18();
 
-    if (!pTutorial17->Init()) {
+    if (!pTutorial18->Init()) {
         return 1;
     }
 
     glutMainLoop();
 
     return 0;
-
 }
-
